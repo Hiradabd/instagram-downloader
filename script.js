@@ -77,29 +77,29 @@ async function simulateDownload(url, contentType) {
         post: {
             title: 'Instagram Post',
             description: 'High quality image post',
-            thumbnail: 'https://via.placeholder.com/300x300/667eea/ffffff?text=Post',
-            downloadUrl: '#',
+            thumbnail: 'https://picsum.photos/seed/postthumb/300/300.jpg',
+            downloadUrl: 'https://picsum.photos/seed/postfull/1200/1200.jpg',
             type: 'image'
         },
         reel: {
             title: 'Instagram Reel',
             description: 'Video reel content',
-            thumbnail: 'https://via.placeholder.com/300x300/764ba2/ffffff?text=Reel',
-            downloadUrl: '#',
+            thumbnail: 'https://peach.blender.org/wp-content/uploads/title_anouncement.jpg?x11217',
+            downloadUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
             type: 'video'
         },
         story: {
             title: 'Instagram Story',
             description: 'Story content (24h)',
-            thumbnail: 'https://via.placeholder.com/300x300/f09433/ffffff?text=Story',
-            downloadUrl: '#',
+            thumbnail: 'https://picsum.photos/seed/storythumb/300/300.jpg',
+            downloadUrl: 'https://picsum.photos/seed/storyfull/1080/1920.jpg',
             type: 'story'
         },
         igtv: {
             title: 'IGTV Video',
             description: 'Long-form video content',
-            thumbnail: 'https://via.placeholder.com/300x300/dc2743/ffffff?text=IGTV',
-            downloadUrl: '#',
+            thumbnail: 'https://i.imgur.com/8KhHqYl.jpeg',
+            downloadUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
             type: 'video'
         }
     };
@@ -121,7 +121,7 @@ function showResults(result) {
                 <p>${result.description}</p>
                 <small>Type: ${result.type} | URL: ${result.originalUrl}</small>
             </div>
-            <button class="download-item-btn" onclick="downloadFile('${result.downloadUrl}', '${result.title}')">
+            <button class="download-item-btn" onclick="downloadFile('${result.downloadUrl}', '${result.title}', '${result.type}')">
                 <i class="fas fa-download"></i>
                 Download
             </button>
@@ -136,15 +136,112 @@ function showResults(result) {
 }
 
 // Download file function
-function downloadFile(url, filename) {
-    // In a real implementation, this would trigger an actual download
-    // For demo purposes, we'll show a success message
-    showNotification(`Download started for: ${filename}`, 'success');
-    
-    // Simulate download process
-    setTimeout(() => {
-        showNotification('Download completed successfully!', 'success');
-    }, 2000);
+async function downloadFile(url, filename, type) {
+    const safeName = sanitizeFilename(filename || 'instagram-content');
+    showNotification(`Download started for: ${safeName}`, 'success');
+
+    try {
+        if (type === 'video') {
+            const videoUrl = url && url !== '#' ? url : 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+            await attemptFetchAndDownload(videoUrl, safeName + '.mp4');
+            showNotification('Video download completed!', 'success');
+            return;
+        }
+
+        // Image or story fallback
+        if (url && url !== '#') {
+            try {
+                await attemptFetchAndDownload(url, safeName + '.jpg');
+                showNotification('Image download completed!', 'success');
+                return;
+            } catch (_) {
+                // Fallback to direct link click if CORS blocks fetch
+                triggerDownloadLink(url, safeName + '.jpg');
+                return;
+            }
+        }
+
+        // Generate a mock image if we don't have a direct URL
+        await generateCanvasImageAndDownload(safeName);
+        showNotification('Image download completed!', 'success');
+    } catch (e) {
+        showError('Unable to download the file in the browser. Try a different URL or ensure the content is public.');
+    }
+}
+
+function sanitizeFilename(name) {
+    return String(name)
+        .replace(/[^a-z0-9\-_. ]/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+async function attemptFetchAndDownload(resourceUrl, filename) {
+    const response = await fetch(resourceUrl, { mode: 'cors' });
+    if (!response.ok) throw new Error('Network response was not ok');
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    try {
+        triggerDownloadLink(objectUrl, filename);
+    } finally {
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+    }
+}
+
+function triggerDownloadLink(href, filename) {
+    const a = document.createElement('a');
+    a.href = href;
+    a.setAttribute('download', filename || 'download');
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    requestAnimationFrame(() => {
+        if (a && a.parentNode) a.parentNode.removeChild(a);
+    });
+}
+
+async function generateCanvasImageAndDownload(titleText) {
+    const size = 1080;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, size, size);
+    grad.addColorStop(0, '#667eea');
+    grad.addColorStop(1, '#764ba2');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+
+    // Caption box
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    const boxMargin = 80;
+    const boxHeight = 360;
+    ctx.fillRect(boxMargin, size - boxMargin - boxHeight, size - boxMargin * 2, boxHeight);
+
+    // Text
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 72px Inter, Arial, sans-serif';
+    ctx.fillText('Instagram Post', boxMargin + 40, size - boxMargin - boxHeight + 120);
+
+    ctx.font = '400 42px Inter, Arial, sans-serif';
+    const lines = [
+        'This is a demo download file.',
+        'Replace with real media via a backend API.',
+        new Date().toLocaleString()
+    ];
+    lines.forEach((line, i) => {
+        ctx.fillText(line, boxMargin + 40, size - boxMargin - boxHeight + 200 + i * 60);
+    });
+
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.95));
+    const objectUrl = URL.createObjectURL(blob);
+    try {
+        triggerDownloadLink(objectUrl, sanitizeFilename(titleText) + '.png');
+    } finally {
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+    }
 }
 
 // Show loading state
