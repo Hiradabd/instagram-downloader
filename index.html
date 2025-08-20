@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Downloader - Download Posts, Stories & Reels</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fab fa-instagram"></i>
+                <h1>Instagram Downloader</h1>
+            </div>
+            <p class="subtitle">Download Instagram posts, stories, and reels easily</p>
+        </header>
+
+        <main class="main-content">
+            <div class="download-card">
+                <div class="input-section">
+                    <div class="input-group">
+                        <i class="fas fa-link"></i>
+                        <input type="text" id="instagramUrl" placeholder="Paste Instagram URL here..." autocomplete="off">
+                        <button id="downloadBtn" class="download-btn">
+                            <i class="fas fa-download"></i>
+                            Download
+                        </button>
+                    </div>
+                </div>
+
+                <div class="features">
+                    <div class="feature">
+                        <i class="fas fa-image"></i>
+                        <span>Posts</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-video"></i>
+                        <span>Reels</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-circle"></i>
+                        <span>Stories</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-users"></i>
+                        <span>IGTV</span>
+                    </div>
+                </div>
+
+                <div class="instructions">
+                    <h3>How to use:</h3>
+                    <ol>
+                        <li>Copy the Instagram post, story, or reel URL</li>
+                        <li>Paste it in the input field above</li>
+                        <li>Click the Download button</li>
+                        <li>Wait for processing and download your content</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="result" class="result-section" style="display: none;">
+                <div class="result-header">
+                    <h3>Download Results</h3>
+                    <button id="clearBtn" class="clear-btn">
+                        <i class="fas fa-times"></i>
+                        Clear
+                    </button>
+                </div>
+                <div id="downloadResults" class="download-results"></div>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Processing your request...</p>
+            </div>
+
+            <div id="error" class="error" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p id="errorMessage"></p>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 Instagram Downloader. For educational purposes only.</p>
+            <p>Respect Instagram's terms of service and user privacy.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
